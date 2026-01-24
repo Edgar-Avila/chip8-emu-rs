@@ -37,6 +37,7 @@ pub struct Chip8 {
     pub stack: [u16; 16],
     pub sp: u8,
     pub keypad: [u8; 16],
+    pub debug: bool,
 }
 
 impl Chip8 {
@@ -56,7 +57,12 @@ impl Chip8 {
             stack: [0; 16],
             sp: 0,
             keypad: [0; 16],
+            debug: false,
         }
+    }
+
+    pub fn enable_debug(&mut self) {
+        self.debug = true;
     }
 
     pub fn load_rom(&mut self, bytes: &Vec<u8>) {
@@ -73,13 +79,14 @@ impl Chip8 {
         Instruction::from(val)
     }
 
-    pub fn emulate(&mut self) -> () {
-        loop {
-            self.tick();
-        }
-    }
-
     pub fn tick(&mut self) {
+        if self.debug {
+            println!("[INFO] PC: {:#06x} - {}", self.pc, self.pc);
+            println!("[INFO] I: {:#06x} - {}", self.i, self.i);
+            println!("[INFO] SP: {:#06x} - {}", self.sp, self.sp);
+            println!("[INFO] V: {:?}", self.v);
+            println!("[INFO] Stack: {:?}", &self.stack[..self.sp as usize]);
+        }
         let opcode = self.pop_opcode();
         self.execute(opcode);
 
@@ -92,13 +99,16 @@ impl Chip8 {
     }
 
     pub fn execute(&mut self, ins: Instruction) {
+        if self.debug {
+            println!("[INFO] Executing: {:?}", ins);
+        }
         match ins {
             Instruction::Cls => {
                 self.gfx.fill(0);
             }
             Instruction::Ret => {
                 self.sp -= 1;
-                self.pc = self.stack[self.pc as usize];
+                self.pc = self.stack[(self.sp) as usize];
             }
             Instruction::Sys(_) => {}
             Instruction::Jump(addr) => self.pc = addr,
@@ -126,7 +136,7 @@ impl Chip8 {
                 self.v[x as usize] = byte;
             }
             Instruction::AddByte(x, byte) => {
-                self.v[x as usize] += byte;
+                self.v[x as usize] = self.v[x as usize].wrapping_add(byte);
             }
             Instruction::LoadReg(x, y) => {
                 self.v[x as usize] = self.v[y as usize];
@@ -141,7 +151,7 @@ impl Chip8 {
                 self.v[x as usize] ^= self.v[y as usize];
             }
             Instruction::AddReg(x, y) => {
-                let sum = u16::from(self.v[x as usize] + self.v[y as usize]);
+                let sum = u16::from(self.v[x as usize]) + u16::from(self.v[y as usize]);
                 self.v[0xF] = u8::from(sum > 255);
                 self.v[x as usize] = (sum & 0xFF) as u8;
             }
