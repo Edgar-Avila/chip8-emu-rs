@@ -5,9 +5,11 @@ mod renderer;
 use chip8::Chip8;
 use clap::{Parser, ValueEnum};
 use renderer::terminal_renderer::TerminalRenderer;
-use std::{fmt::Display, fs, io, path::PathBuf};
+use std::{fmt::Display, fs, io, path::PathBuf, thread, time};
 
 use crate::renderer::renderer::Renderer;
+
+const TARGET_FPS: u64 = 60;
 
 #[derive(ValueEnum, Clone, Debug)]
 enum RendererType {
@@ -44,6 +46,7 @@ struct Args {
 fn main() -> Result<(), io::Error> {
     let args = Args::parse();
     let bytes = fs::read(args.rom)?;
+    let target_ft = time::Duration::from_micros(1_000_000/TARGET_FPS);
     let mut chip8 = Chip8::new();
     let mut t_renderer = TerminalRenderer::new();
     t_renderer.init();
@@ -53,12 +56,20 @@ fn main() -> Result<(), io::Error> {
     }
     match args.cycles {
         None => loop {
+            let frame_time = time::Instant::now();
             chip8.tick();
             t_renderer.render(&chip8);
+            if let Some(remaining) = target_ft.checked_sub(frame_time.elapsed()) {
+                thread::sleep(remaining);
+            }
         }
         Some(cycles) => for _ in 0..cycles {
+            let frame_time = time::Instant::now();
             chip8.tick();
             t_renderer.render(&chip8);
+            if let Some(remaining) = target_ft.checked_sub(frame_time.elapsed()) {
+                thread::sleep(remaining);
+            }
         },
     }
     t_renderer.cleanup();
