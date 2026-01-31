@@ -159,7 +159,9 @@ impl Chip8 {
                 let x = x as usize;
                 let y = y as usize;
                 self.v[0xF] = u8::from(self.v[x] > self.v[y]);
-                self.v[x] -= self.v[y];
+                if self.v[x] > self.v[y] {
+                    self.v[x] -= self.v[y];
+                }
             }
             Instruction::ShrReg(x, _) => {
                 let x = x as usize;
@@ -170,7 +172,9 @@ impl Chip8 {
                 let x = x as usize;
                 let y = y as usize;
                 self.v[0xF] = u8::from(self.v[y] > self.v[x]);
-                self.v[x] = self.v[y] - self.v[x];
+                if self.v[y] > self.v[x] {
+                    self.v[x] = self.v[y] - self.v[x];
+                }
             }
             Instruction::ShlReg(x, _) => {
                 let x = x as usize;

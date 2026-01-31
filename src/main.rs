@@ -33,18 +33,34 @@ struct Args {
     /// Display type
     #[arg(short, long, default_value_t = RendererType::Terminal)]
     display: RendererType,
+
+    #[arg(long, default_value_t = false)]
+    debug: bool,
+
+    #[arg(short, long)]
+    cycles: Option<u32>,
 }
 
 fn main() -> Result<(), io::Error> {
     let args = Args::parse();
     let bytes = fs::read(args.rom)?;
     let mut chip8 = Chip8::new();
-    let t_renderer = TerminalRenderer::new();
+    let mut t_renderer = TerminalRenderer::new();
+    t_renderer.init();
     chip8.load_rom(&bytes);
-    chip8.enable_debug();
-    loop {
-        chip8.tick();
-        t_renderer.render(&chip8);
+    if args.debug {
+        chip8.enable_debug();
     }
+    match args.cycles {
+        None => loop {
+            chip8.tick();
+            t_renderer.render(&chip8);
+        }
+        Some(cycles) => for _ in 0..cycles {
+            chip8.tick();
+            t_renderer.render(&chip8);
+        },
+    }
+    t_renderer.cleanup();
     Ok(())
 }
