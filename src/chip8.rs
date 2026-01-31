@@ -1,3 +1,5 @@
+use std::ops::{Sub, SubAssign};
+
 use crate::instruction::Instruction;
 
 pub const OPS_START_ADDRESS: u16 = 0x200;
@@ -152,34 +154,36 @@ impl Chip8 {
             }
             Instruction::AddReg(x, y) => {
                 let sum = u16::from(self.v[x as usize]) + u16::from(self.v[y as usize]);
-                self.v[0xF] = u8::from(sum > 255);
                 self.v[x as usize] = (sum & 0xFF) as u8;
+                self.v[0xF] = u8::from(sum > 255);
             }
             Instruction::SubReg(x, y) => {
                 let x = x as usize;
                 let y = y as usize;
-                self.v[0xF] = u8::from(self.v[x] > self.v[y]);
-                if self.v[x] > self.v[y] {
-                    self.v[x] -= self.v[y];
-                }
+                let x_val = self.v[x];
+                let y_val = self.v[y];
+                self.v[x] = x_val.wrapping_sub(y_val);
+                self.v[0xF] = u8::from(x_val >= y_val);
             }
             Instruction::ShrReg(x, _) => {
                 let x = x as usize;
-                self.v[0xF] = self.v[x] & 0x01;
+                let x_val = self.v[x];
                 self.v[x] >>= 1;
+                self.v[0xF] = x_val & 0x01;
             }
             Instruction::SubnReg(x, y) => {
                 let x = x as usize;
                 let y = y as usize;
-                self.v[0xF] = u8::from(self.v[y] > self.v[x]);
-                if self.v[y] > self.v[x] {
-                    self.v[x] = self.v[y] - self.v[x];
-                }
+                let x_val = self.v[x];
+                let y_val = self.v[y];
+                self.v[x] = y_val.wrapping_sub(x_val);
+                self.v[0xF] = u8::from(y_val >= x_val);
             }
             Instruction::ShlReg(x, _) => {
                 let x = x as usize;
-                self.v[0xF] = (self.v[x] & 0x80) >> 7;
+                let x_val = self.v[x];
                 self.v[x] <<= 1;
+                self.v[0xF] = (x_val & 0x80) >> 7;
             }
             Instruction::SkipNeReg(x, y) => {
                 if self.v[x as usize] != self.v[y as usize] {
