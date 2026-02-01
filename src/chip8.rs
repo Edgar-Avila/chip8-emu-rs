@@ -1,5 +1,3 @@
-use std::ops::{Sub, SubAssign};
-
 use crate::instruction::Instruction;
 
 pub const OPS_START_ADDRESS: u16 = 0x200;
