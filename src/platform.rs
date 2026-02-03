@@ -13,11 +13,11 @@ pub struct Settings {
 pub trait Platform {
     fn new(chip8: Chip8, settings: Settings) -> Self;
     fn load(&mut self, rom: Vec<u8>);
-    fn init(&mut self);
-    fn update(&mut self);
-    fn render(&mut self);
-    fn run(&mut self);
-    fn cleanup(&mut self);
+    fn init(&mut self) -> Result<(), Box<dyn std::error::Error>>;
+    fn update(&mut self) -> Result<(), Box<dyn std::error::Error>>;
+    fn render(&mut self) -> Result<(), Box<dyn std::error::Error>>;
+    fn run(&mut self) -> Result<(), Box<dyn std::error::Error>>;
+    fn cleanup(&mut self) -> Result<(), Box<dyn std::error::Error>>;
 }
 
 #[derive(ValueEnum, Clone, Debug)]

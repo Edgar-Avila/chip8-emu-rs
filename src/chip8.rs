@@ -1,10 +1,10 @@
 use crate::instruction::Instruction;
 
-pub const OPS_START_ADDRESS: u16 = 0x200;
-pub const FONTSET_START_ADDRESS: u16 = 0x50;
-pub const FONTSET_SIZE: usize = 80;
-pub const VIDEO_WIDTH: u16 = 64;
-pub const VIDEO_HEIGHT: u16 = 32;
+const OPS_START_ADDRESS: u16 = 0x200;
+const FONTSET_START_ADDRESS: u16 = 0x50;
+const FONTSET_SIZE: usize = 80;
+const VIDEO_WIDTH: u16 = 64;
+const VIDEO_HEIGHT: u16 = 32;
 
 const FONTSET: [u8; FONTSET_SIZE] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -27,17 +27,17 @@ const FONTSET: [u8; FONTSET_SIZE] = [
 
 #[derive(Debug)]
 pub struct Chip8 {
-    pub memory: [u8; 4096],
-    pub v: [u8; 16],
-    pub i: u16,
-    pub pc: u16,
-    pub gfx: [u8; 64 * 32],
-    pub delay_timer: u8,
-    pub sound_timer: u8,
-    pub stack: [u16; 16],
-    pub sp: u8,
-    pub keypad: [u8; 16],
-    pub debug: bool,
+    memory: [u8; 4096],
+    v: [u8; 16],
+    i: u16,
+    pc: u16,
+    gfx: [u8; 64 * 32],
+    delay_timer: u8,
+    sound_timer: u8,
+    stack: [u16; 16],
+    sp: u8,
+    keypad: [u8; 16],
+    debug: bool,
 }
 
 impl Chip8 {
@@ -71,7 +71,18 @@ impl Chip8 {
         self.memory[start..end].copy_from_slice(&bytes);
     }
 
-    pub fn pop_opcode(&mut self) -> Instruction {
+    pub fn keypress(&mut self, key: usize, pressed: bool) {
+        if key < 16 {
+            self.keypad[key] = u8::from(pressed);
+        }
+    }
+
+    pub fn pixel_at(&self, x: u16, y: u16) -> u8 {
+        let index = (x + y * VIDEO_WIDTH) as usize;
+        self.gfx[index]
+    }
+
+    fn pop_opcode(&mut self) -> Instruction {
         let high_byte = self.memory[self.pc as usize];
         let low_byte = self.memory[(self.pc + 1) as usize];
         self.pc += 2;
@@ -98,7 +109,7 @@ impl Chip8 {
         }
     }
 
-    pub fn execute(&mut self, ins: Instruction) {
+    fn execute(&mut self, ins: Instruction) {
         if self.debug {
             println!("[INFO] Executing: {:?}", ins);
         }
@@ -202,7 +213,6 @@ impl Chip8 {
                 let vx = self.v[x as usize] as u16;
                 let vy = self.v[y as usize] as u16;
                 self.v[0xF] = 0;
-
                 for byte_index in 0..n {
                     let sprite_byte = self.memory[(self.i + byte_index as u16) as usize];
                     for bit_index in 0..8 {
@@ -210,7 +220,6 @@ impl Chip8 {
                         let x_coord = (vx + bit_index) % VIDEO_WIDTH;
                         let y_coord = (vy + byte_index as u16) % VIDEO_HEIGHT;
                         let gfx_index = (x_coord + y_coord * VIDEO_WIDTH) as usize;
-
                         if pixel_value == 1 {
                             if self.gfx[gfx_index] == 1 {
                                 self.v[0xF] = 1;

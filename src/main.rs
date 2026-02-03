@@ -4,8 +4,8 @@ mod platform;
 
 use chip8::Chip8;
 use clap::Parser;
-use platform::{PlatformType,Platform,terminal_platform::TerminalPlatform};
-use std::{fs, io, path::PathBuf};
+use platform::{Platform, PlatformType, terminal_platform::TerminalPlatform};
+use std::{fs, path::PathBuf};
 
 /// Chip-8 Emulator
 #[derive(Parser, Debug)]
@@ -29,7 +29,7 @@ struct Args {
     fps: u64,
 }
 
-fn main() -> Result<(), io::Error> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
     let chip8 = Chip8::new();
     let settings = platform::Settings {
@@ -40,12 +40,12 @@ fn main() -> Result<(), io::Error> {
     let mut platform = match args.platform {
         PlatformType::Terminal => TerminalPlatform::new(chip8, settings),
     };
-    platform.init();
+    platform.init()?;
     if let Some(rom) = args.rom {
         let bytes = fs::read(rom)?;
         platform.load(bytes);
     }
-    platform.run();
-    platform.cleanup();
+    platform.run()?;
+    platform.cleanup()?;
     Ok(())
 }

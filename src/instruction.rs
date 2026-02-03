@@ -1,40 +1,76 @@
 #[derive(Debug, PartialEq, Eq)]
 pub enum Instruction {
-    Cls,                // CLS
-    Ret,                // RET
-    Sys(u16),           // SYS addr
-    Jump(u16),          // JP addr
-    Call(u16),          // CALL addr
-    SkipEqByte(u8, u8), // SE Vx, byte
-    SkipNeByte(u8, u8), // SNE Vx, byte
-    SkipEqReg(u8, u8),  // SE Vx, Vy
-    LoadByte(u8, u8),   // LD Vx, byte
-    AddByte(u8, u8),    // ADD Vx, byte
-    LoadReg(u8, u8),    // LD Vx, Vy
-    OrReg(u8, u8),      // OR Vx, Vy
-    AndReg(u8, u8),     // AND Vx, Vy
-    XorReg(u8, u8),     // XOR Vx, Vy
-    AddReg(u8, u8),     // ADD Vx, Vy
-    SubReg(u8, u8),     // SUB Vx, Vy
-    ShrReg(u8, u8),     // SHR Vx {, Vy}
-    SubnReg(u8, u8),    // SUBN Vx, Vy
-    ShlReg(u8, u8),     // SHL Vx {, Vy}
-    SkipNeReg(u8, u8),  // SNE Vx, Vy
-    LoadI(u16),         // LD I, addr
-    JumpV0(u16),        // JP V0, addr
-    Rand(u8, u8),       // RND Vx, byte
-    Draw(u8, u8, u8),   // DRW Vx, Vy, nibble
-    SkipIfKey(u8),      // SKP Vx
-    SkipIfNotKey(u8),   // SKNP Vx
-    LoadDT(u8),         // LD Vx, DT
-    WaitKey(u8),        // LD Vx, K
-    SetDT(u8),          // LD DT, Vx
-    SetST(u8),          // LD ST, Vx
-    AddI(u8),           // ADD I, Vx
-    LoadSprite(u8),     // LD F, Vx
-    Bcd(u8),            // LD B, Vx
-    DumpRegs(u8),       // LD [I], Vx
-    LoadRegs(u8),       // LD Vx, [I]
+    /// 0x00E0 - Clear the display
+    Cls,
+    /// 0x00EE - Return from a subroutine
+    Ret,
+    /// 0x0NNN - Jump to a machine code routine at address NNN
+    Sys(u16),
+    /// 0x1NNN - Jump to address NNN
+    Jump(u16),
+    /// 0x2NNN - Call subroutine at NNN
+    Call(u16),
+    /// 0x3XNN - Skip next instruction if VX equals NN
+    SkipEqByte(u8, u8),
+    /// 0x4XNN - Skip next instruction if VX does not equal NN
+    SkipNeByte(u8, u8),
+    /// 0x5XY0 - Skip next instruction if VX equals VY
+    SkipEqReg(u8, u8),
+    /// 0x6XNN - Set VX to NN
+    LoadByte(u8, u8),
+    /// 0x7XNN - Add NN to VX
+    AddByte(u8, u8),
+    /// 0x8XY0 - Set VX to the value of VY
+    LoadReg(u8, u8),
+    /// 0x8XY1 - Set VX to VX OR VY
+    OrReg(u8, u8),
+    /// 0x8XY2 - Set VX to VX AND VY
+    AndReg(u8, u8),
+    /// 0x8XY3 - Set VX to VX XOR VY
+    XorReg(u8, u8),
+    /// 0x8XY4 - Add VY to VX. Set VF to 1 if there's a carry, else 0
+    AddReg(u8, u8),
+    /// 0x8XY5 - Subtract VY from VX. Set VF to 0 if there's a borrow, else 1
+    SubReg(u8, u8),
+    /// 0x8XY6 - Shift VX right by one. VF is set to the least significant bit of VX before the shift
+    ShrReg(u8, u8),
+    /// 0x8XY7 - Set VX to VY minus VX. Set VF to 0 if there's a borrow, else 1
+    SubnReg(u8, u8),
+    /// 0x8XYE - Shift VX left by one. VF is set to the most significant bit of VX before the shift
+    ShlReg(u8, u8),
+    /// 0x9XY0 - Skip next instruction if VX does not equal VY
+    SkipNeReg(u8, u8),
+    /// 0xANNN - Set I to address NNN
+    LoadI(u16),
+    /// 0xBNNN - Jump to address NNN plus V0
+    JumpV0(u16),
+    /// 0xCXNN - Set VX to a random byte AND NN
+    Rand(u8, u8),
+    /// 0xDXYN - Draw a sprite at (VX, VY) with N bytes of sprite data starting at the address stored in I
+    Draw(u8, u8, u8),
+    /// 0xEX9E - Skip next instruction if key with the value of VX is pressed
+    SkipIfKey(u8),
+    /// 0xEXA1 - Skip next instruction if key with the value of VX is not pressed
+    SkipIfNotKey(u8),
+    /// 0xFX07 - Set VX to the value of the delay timer
+    LoadDT(u8),
+    /// 0xFX0A - Wait for a key press and store the value of the key in VX
+    WaitKey(u8),
+    /// 0xFX15 - Set the delay timer to VX
+    SetDT(u8),
+    /// 0xFX18 - Set the sound timer to VX
+    SetST(u8),
+    /// 0xFX1E - Add VX to I
+    AddI(u8),
+    /// 0xFX29 - Set I to the location of the sprite for the character in VX
+    LoadSprite(u8),
+    /// 0xFX33 - Store the binary-coded decimal representation of VX at addresses I, I+1, and I+2
+    Bcd(u8),
+    /// 0xFX55 - Store registers V0 through VX in memory starting at address I
+    DumpRegs(u8),
+    /// 0xFX65 - Read registers V0 through VX from memory starting at address I
+    LoadRegs(u8),
+    /// No operation (invalid or unrecognized opcode)
     NoOp,
 }
 
