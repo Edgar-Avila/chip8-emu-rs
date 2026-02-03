@@ -1,3 +1,5 @@
+mod instruction;
+
 use crate::instruction::Instruction;
 
 const OPS_START_ADDRESS: u16 = 0x200;

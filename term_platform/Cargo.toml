@@ -1,10 +1,9 @@
 [package]
-name = "chip8-emu"
+name = "term_platform"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-rand = "0.9.2"
-minifb = "0.28.0"
 clap = { version = "4.5.53", features = ["derive"] }
 crossterm = "0.29.0"
+chip8 = { path = "../chip8" }
