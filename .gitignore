@@ -1,2 +1,5 @@
 /target
 term_platform/target
+wasm_platform/pkg
+wasm_platform/target
+chip8/target
